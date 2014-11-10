@@ -84,23 +84,23 @@ ABCJS.write.AbsoluteElement.prototype.pushBottom = function (bottom) {
 	this.bottom = Math.min(bottom, this.bottom);
 };
 
-ABCJS.write.AbsoluteElement.prototype.draw = function (printer, bartop) {
-	this.elemset = printer.paper.set();
+ABCJS.write.AbsoluteElement.prototype.draw = function (renderer, bartop) {
+	this.elemset = renderer.paper.set();
 	if (this.invisible) return;
-	printer.beginGroup();
+	renderer.beginGroup();
 	for (var i=0; i<this.children.length; i++) {
-		this.elemset.push(this.children[i].draw(printer,this.x, bartop));
+		this.elemset.push(this.children[i].draw(renderer,this.x, bartop));
 	}
-	this.elemset.push(printer.endGroup(this.type));
+	this.elemset.push(renderer.endGroup(this.type));
 	if (this.klass)
 		this.setClass("mark", "", "#00ff00");
 	var self = this;
 	this.elemset.mouseup(function () {
-		printer.notifySelect(self);
+		renderer.notifySelect(self);
 	});
 	this.abcelem.abselem = this;
 
-	var spacing = ABCJS.write.spacing.STEP*printer.scale;
+	var spacing = ABCJS.write.spacing.STEP*renderer.scale;
 
 	var start = function () {
 			// storing original relative coordinates
@@ -117,16 +117,17 @@ ABCJS.write.AbsoluteElement.prototype.draw = function (printer, bartop) {
 			var delta = -Math.round(this.dy/spacing);
 			self.abcelem.pitches[0].pitch += delta;
 			self.abcelem.pitches[0].verticalPos += delta;
-			printer.notifyChange();
+			renderer.notifyChange();
 		};
-	if (this.abcelem.el_type==="note" && printer.editable)
+	if (this.abcelem.el_type==="note" && renderer.editable)
 		this.elemset.drag(move, start, up);
 };
 
 ABCJS.write.AbsoluteElement.prototype.isIE=/*@cc_on!@*/false;//IE detector
 
 ABCJS.write.AbsoluteElement.prototype.setClass = function (addClass, removeClass, color) {
-	this.elemset.attr({fill:color});
+	if (color !== null)
+		this.elemset.attr({fill:color});
 	if (!this.isIE) {
 		for (var i = 0; i < this.elemset.length; i++) {
 			if (this.elemset[i][0].setAttribute) {
@@ -144,11 +145,19 @@ ABCJS.write.AbsoluteElement.prototype.setClass = function (addClass, removeClass
 	}
 };
 
-ABCJS.write.AbsoluteElement.prototype.highlight = function () {
-	this.setClass("note_selected", "", "#ff0000");
+ABCJS.write.AbsoluteElement.prototype.highlight = function (klass, color) {
+	if (klass === undefined)
+		klass = "note_selected";
+	if (color === undefined)
+		color = "#ff0000";
+	this.setClass(klass, "", color);
 };
 
-ABCJS.write.AbsoluteElement.prototype.unhighlight = function () {
-	this.setClass("", "note_selected", "#000000");
+ABCJS.write.AbsoluteElement.prototype.unhighlight = function (klass, color) {
+	if (klass === undefined)
+		klass = "note_selected";
+	if (color === undefined)
+		color = "#000000";
+	this.setClass("", klass, color);
 };
 
